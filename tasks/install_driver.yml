@@ -8,7 +8,7 @@
     if($x)
     {
       @{NotFound = $false } | ConvertTo-JSON;
-     
+
     }else{
       @{NotFound = $true} | ConvertTo-JSON;
     }
@@ -17,6 +17,7 @@
   failed_when: none
 
 - name: "Install Printer Driver Package {{ item.driver_name }}"
+  when: is_driver_installed.changed
   block:
     - name: "Create temporary folder for Printer Driver Package {{ item.driver_name }} download"
       win_tempfile:
@@ -27,15 +28,15 @@
     - name: "Download Printer Driver Package {{ item.driver_name }}"
       win_get_url:
         url: "{{ item.download_url }}"
-        dest: "{{ driver_temp.path}}/{{ item.driver_name }}.zip"
+        dest: "{{ driver_temp.path }}/{{ item.driver_name }}.zip"
         url_username: "{{ item.download_url_user }}"
         url_password: "{{ item.download_url_password }}"
 
     - name: "Extract Printer Driver Package {{ item.driver_name }}"
       win_unzip:
-        src: "{{ driver_temp.path}}/{{ item.driver_name }}.zip"
+        src: "{{ driver_temp.path }}/{{ item.driver_name }}.zip"
         dest: "{{ driver_store }}/{{ item.driver_name }}"
-      
+
     - name: "Ensure Printer Driver Package {{ item.driver_name }} is installed"
       win_printer_driver:
         inf_file: "{{ driver_store }}/{{ item.driver_name }}/{{ item.driver_setup.inf_file }}"
@@ -55,4 +56,3 @@
       win_file:
         path: "{{ driver_temp.path }}"
         state: absent
-  when: is_driver_installed.changed
